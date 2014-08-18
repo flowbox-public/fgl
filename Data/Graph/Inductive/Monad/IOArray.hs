@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 
 -- (c) 2002 by Martin Erwig [see file COPYRIGHT]
 -- | Static IOArray-based Graphs
