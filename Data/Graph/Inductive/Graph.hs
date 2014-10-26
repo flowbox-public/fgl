@@ -99,7 +99,7 @@ buildGr    :: DynGraph gr => [Context a b] -> gr a b
 mkUGraph   :: DynGraph gr => [Node] -> [Edge] -> gr () ()
 
 -- graph inspection
-context    :: Graph gr => gr a b -> Node -> Context a b
+context    :: Graph gr => gr a b -> Node -> Maybe (Context a b)
 lab        :: Graph gr => gr a b -> Node -> Maybe a
 neighbors  :: Graph gr => gr a b -> Node -> [Node]
 suc        :: Graph gr => gr a b -> Node -> [Node]
@@ -298,57 +298,57 @@ mkUGraph vs es = mkGraph (labUNodes vs) (labUEdges es)
    where labUEdges = map (\(v,w)->(v,w,()))
          labUNodes = map (\v->(v,()))
 
--- | Find the context for the given 'Node'.  Causes an error if the 'Node' is
+-- | Find the context for the given 'Node'. Is Nothing in case the 'Node' is
 -- not present in the 'Graph'.
-context :: Graph gr => gr a b -> Node -> Context a b
+context :: Graph gr => gr a b -> Node -> Maybe (Context a b)
 context g v = case match v g of
-                (Nothing,_) -> error ("Match Exception, Node: "++show v)
-                (Just c,_)  -> c
+                (Nothing,_) -> Nothing
+                (Just c,_)  -> Just c
 
 -- | Find the label for a 'Node'.
 lab :: Graph gr => gr a b -> Node -> Maybe a
 lab g v = fst (match v g) >>= return.lab'
 
 -- | Find the neighbors for a 'Node'.
-neighbors :: Graph gr => gr a b -> Node -> [Node]
-neighbors = (\(p,_,_,s) -> map snd (p++s)) .: context
+neighbors :: Graph gr => gr a b -> Node -> Maybe [Node]
+neighbors = fmap (\(p,_,_,s) -> map snd (p++s)) .: context
 
 -- | Find all 'Node's that have a link from the given 'Node'.
-suc :: Graph gr => gr a b -> Node -> [Node]
-suc = map snd .: context4l
+suc :: Graph gr => gr a b -> Node -> Maybe [Node]
+suc = fmap (map snd) .: context4l
 
 -- | Find all 'Node's that link to to the given 'Node'.
-pre :: Graph gr => gr a b -> Node -> [Node]
-pre = map snd .: context1l
+pre :: Graph gr => gr a b -> Node -> Maybe [Node]
+pre = fmap (map snd) .: context1l
 
 -- | Find all 'Node's that are linked from the given 'Node' and the label of
 -- each link.
-lsuc :: Graph gr => gr a b -> Node -> [(Node,b)]
-lsuc = map flip2 .: context4l
+lsuc :: Graph gr => gr a b -> Node -> Maybe [(Node,b)]
+lsuc = fmap (map flip2) .: context4l
 
 -- | Find all 'Node's that link to the given 'Node' and the label of each link.
-lpre :: Graph gr => gr a b -> Node -> [(Node,b)]
-lpre = map flip2 .: context1l
+lpre :: Graph gr => gr a b -> Node -> Maybe [(Node,b)]
+lpre = fmap (map flip2) .: context1l
 
 -- | Find all outward-bound 'LEdge's for the given 'Node'.
-out :: Graph gr => gr a b -> Node -> [LEdge b]
-out g v = map (\(l,w)->(v,w,l)) (context4l g v)
+out :: Graph gr => gr a b -> Node -> Maybe [LEdge b]
+out g v = fmap (map (\(l,w)->(v,w,l))) (context4l g v)
 
 -- | Find all inward-bound 'LEdge's for the given 'Node'.
-inn :: Graph gr => gr a b -> Node -> [LEdge b]
-inn g v = map (\(l,w)->(w,v,l)) (context1l g v)
+inn :: Graph gr => gr a b -> Node -> Maybe [LEdge b]
+inn g v = fmap (map (\(l,w)->(w,v,l))) (context1l g v)
 
 -- | The outward-bound degree of the 'Node'.
-outdeg :: Graph gr => gr a b -> Node -> Int
-outdeg = length .: context4l
+outdeg :: Graph gr => gr a b -> Node -> Maybe Int
+outdeg = fmap length .: context4l
 
 -- | The inward-bound degree of the 'Node'.
-indeg :: Graph gr => gr a b -> Node -> Int
-indeg  = length .: context1l
+indeg :: Graph gr => gr a b -> Node -> Maybe Int
+indeg  = fmap length .: context1l
 
 -- | The degree of the 'Node'.
-deg :: Graph gr => gr a b -> Node -> Int
-deg = (\(p,_,_,s) -> length p+length s) .: context
+deg :: Graph gr => gr a b -> Node -> Maybe Int
+deg = fmap (\(p,_,_,s) -> length p+length s) .: context
 
 -- | The 'Node' in a 'Context'.
 node' :: Context a b -> Node
@@ -448,11 +448,11 @@ flip2 (x,y) = (y,x)
 
 -- projecting on context elements
 --
-context1l :: Graph gr => gr a b -> Node -> Adj b
-context1l = context1l' .: context
+context1l :: Graph gr => gr a b -> Node -> Maybe (Adj b)
+context1l = fmap context1l' .: context
 
-context4l :: Graph gr => gr a b -> Node -> Adj b
-context4l = context4l' .: context
+context4l :: Graph gr => gr a b -> Node -> Maybe (Adj b)
+context4l = fmap context4l' .: context
 
 context1l' :: Context a b -> Adj b
 context1l' (p,v,_,s) = p++filter ((==v).snd) s

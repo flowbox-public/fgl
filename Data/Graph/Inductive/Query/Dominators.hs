@@ -61,7 +61,7 @@ idomWork g root = let
     -- toNode translates internal nodes to graph nodes
     toNode = array (0, s-1) (zip (T.flatten ntree) (T.flatten tree))
     preds = array (1, s-1) [(i, filter (/= -1) (map (fromNode I.!)
-                            (pre g (toNode ! i)))) | i <- [1..s-1]]
+                            (maybe [] id (pre g (toNode ! i))))) | i <- [1..s-1]]
     -- iteratively improve the approximation to find iDom.
     iDom = fixEq (refineIDom preds) iDom0
   in
