@@ -114,8 +114,9 @@ esp s t = getPath t . bft s
 --
 lbft :: Graph gr => Node -> gr a b -> LRTree b
 lbft v g = case (out g v) of 
-             []         -> [LP []]
-             (v',_,l):_ -> lbf (queuePut (LP [(v',l)]) mkQueue) g
+             Nothing    -> [LP []]
+             Just []         -> [LP []]
+             Just ((v',_,l):_) -> lbf (queuePut (LP [(v',l)]) mkQueue) g
 
 lbf :: Graph gr => Queue (LPath b) -> gr a b -> LRTree b
 lbf q g | queueEmpty q || isEmpty g = []

@@ -113,7 +113,7 @@ maxFlowgraph g s t = emap (\(u,v,_)->(v,u)) g2
 
 -- | Compute the value of a maximumflow
 maxFlow :: (DynGraph gr,Num b,Ord b) => gr a b -> Node -> Node -> b
-maxFlow g s t = foldr (+) 0 (map (\(_,_,(x,_))->x)(out (maxFlowgraph g s t) s))
+maxFlow g s t = foldr (+) 0 (map (\(_,_,(x,_))->x)(maybe [] id $ out (maxFlowgraph g s t) s))
 
 ------------------------------------------------------------------------------
 -- Some test cases: clr595 is from the CLR textbook, page 595. The value of
